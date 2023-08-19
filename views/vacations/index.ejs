@@ -18,10 +18,10 @@
         <%if(user._id.toString() === f.userId){%>
         <form id="delete-vacation" method="POST" action="/vacations/<%= f._id %>?_method=DELETE">
           <button class="details" >Delete</button></form>
-        <%}%>
-
-      </li>
-      <%}%> <% }) %>
+<%}%>
+</li>
+<%}%>
+      <% }) %>
     </ul> 
   </div>
 
@@ -38,7 +38,8 @@
         <form id="delete-vacation" method="POST" action="/vacations/<%= f._id %>?_method=DELETE">
           <button class="details">Delete</button></form>
       </li>
-      <%}%> <% }) %>
+      <%}%>
+      <%}) %>
     </ul>
   </div>
 </div>

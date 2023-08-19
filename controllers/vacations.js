@@ -90,6 +90,7 @@ async function vacationCreate(req, res) {
     await user.vacations.push(createVacation._id);
     user.save();
     await addVacationToCompanions(vacationData.companions, createVacation._id);
+ 
     res.redirect("/vacations");
   } catch (err) {
     res.render("vacations/new", { errorMsg: err.message });
@@ -104,7 +105,7 @@ async function getVacations(req, res) {
   console.log(await Vacation.find({}));
 }
 
-//This function finds all trips you've created
+
 // async function index(req, res){
 //     const userinfo = req.user
 //     try {
@@ -217,6 +218,7 @@ async function edit(req, res) {
 
 async function update(req, res) {
   const updateData = { ...req.body };
+  const vacation = await Vacation.findById(req.params.id)
   if (updateData.companions) {
     updateData.companions = updateData.companions.split(/\s*,\s*/);
     updateData.companions = await getFriends(updateData.companions);
@@ -231,7 +233,11 @@ async function update(req, res) {
     updateData
   );
   await saveData.save();
+  await addVacationToCompanions(updateData.companions, req.params.id);
+  let removedCompanions = getRemovedCompanions(updateData.companions, vacation.companions)
+  await removeVacationToCompanions(removedCompanions, vacation.id);
   res.redirect("/vacations/" + req.params.id);
+
 }
 
 function compareDates(a, b) {
@@ -261,8 +267,16 @@ async function getFriendsNames(companions) {
 async function addVacationToCompanions(companions, vacationId) {
   for (i = 0; i < companions.length; i++) {
     let companion = await User.findById(companions[i]);
+    if(!companion.vacations.includes(vacationId)){
     companion.vacations.push(vacationId);
     await companion.save();
+    }
+  }
+}
+async function removeVacationToCompanions(companions, vacationId) {
+  for (i = 0; i < companions.length; i++) {
+    companions[i].vacations = companions[i].vacations.filter(compVac => compVac.toString() !== vacationId.toString());
+    const companionUpdate = await User.updateOne({_id: companions[i]._id}, {vacations: companions[i].vacations})
   }
 }
 
@@ -270,7 +284,9 @@ async function findUserVacations(vacations) {
   let vacationsFind = [];
   for (i = 0; i < vacations.length; i++) {
     let vacation = await Vacation.findById(vacations[i]);
+    if(vacation !== null){
     vacationsFind.push(vacation);
+    }
   }
   return vacationsFind;
 }
@@ -326,4 +342,14 @@ async function deletePhoto(req, res) {
   res.redirect(`/vacations/${vacation._id}`);
 }
 
+function getRemovedCompanions(users, userIds){
+  let removedCompanions = []
+  for (user of users){
+    if (user._id.toString().includes(user.toString())){
+removedCompanions.push(user)
+    }
+    console.log(removedCompanions)
+  }
+return removedCompanions
+}
 
